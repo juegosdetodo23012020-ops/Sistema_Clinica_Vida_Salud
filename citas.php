@@ -85,7 +85,7 @@ require 'config/database.php';
                 <input type="date" name="fecha" required min="<?php echo date('Y-m-d'); ?>">
 
                 <label>Hora de Inicio:</label>
-                <input type="time" name="hora_inicio" required step="1800">
+                <input type="time" name="hora_inicio" required step="900"> <!-- step="900" permite intervalos de 15 minutos --> 
 
                 <label>Modalidad:</label>
                 <select name="modalidad" required>

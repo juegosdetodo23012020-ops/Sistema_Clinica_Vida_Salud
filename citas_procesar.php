@@ -11,8 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $modalidad = $_POST['modalidad'];
     $motivo = trim($_POST['motivo']);
 
-    // Calculamos la hora de fin (sumamos 30 minutos a la hora de inicio)
-    $hora_fin = date('H:i:s', strtotime($hora_inicio . ' +30 minutes'));
+    // Calculamos la hora de fin (sumamos 15 minutos a la hora de inicio)
+    $hora_fin = date('H:i:s', strtotime($hora_inicio . ' +15 minutes'));
 
            try {
         // 1. Obtener la especialidad principal del médico
