@@ -1,14 +1,14 @@
 <?php
-// Iniciar la sesión para terminar la sesión del usuario 
+// Iniciar la sesión para poder destruirla
 session_start();
 
-// Eliminar todas las demas sesiones y variables de sesión
+// Eliminar todas las variables de sesión
 $_SESSION = array();
 
-// Terminar la sesión en el servidor
+// Destruir la sesión en el servidor
 session_destroy();
 
-// volver al ususario al index.php (login)
-header("Location: index.php");
+// Redirigir al usuario a la página de inicio de sesión con el mensaje de éxito
+header("Location: index.php?mensaje=logout");
 exit;
 ?>

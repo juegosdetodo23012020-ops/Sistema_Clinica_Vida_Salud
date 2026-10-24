@@ -78,6 +78,10 @@ $usuario = $_SESSION['nombre_usuario'];
                     <h3>Gestión de Usuarios</h3>
                     <p>Administrar cuentas del sistema.</p>
                 </a>
+                <a href="roles.php" class="card">
+                 <h3>Roles y Permisos</h3>
+                  <p>Ver la matriz de acceso del sistema.</p>
+                </a>
                 <a href="#" class="card">
                     <h3>Reportes</h3>
                     <p>Ver estadísticas de la clínica.</p>
