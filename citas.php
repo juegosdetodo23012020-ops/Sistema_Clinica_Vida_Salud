@@ -101,8 +101,14 @@ require 'config/database.php';
         </div>
 
         <!-- TABLA DE ÚLTIMAS CITAS -->
+                <!-- TABLA DE GESTIÓN DE CITAS (Modificada para Ciclo 2) -->
         <div class="table-section">
-            <h3>Últimas Citas Registradas</h3>
+            <h3>Gestión de Citas</h3>
+            
+            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'cancelada'): ?>
+                <div class="alert alert-success">¡Cita cancelada correctamente! El horario ha sido liberado.</div>
+            <?php endif; ?>
+
             <table>
                 <thead>
                     <tr>
@@ -111,12 +117,13 @@ require 'config/database.php';
                         <th>Paciente</th>
                         <th>Médico</th>
                         <th>Estado</th>
+                        <th>Acciones (Cancelar)</th> <!-- NUEVA COLUMNA -->
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    // Consultamos las últimas 10 citas usando la vista que creó tu compañera
-                    $sql = "SELECT codigo, fecha, hora_inicio, paciente, medico, estado FROM v_cita_detalle ORDER BY fecha DESC, hora_inicio DESC LIMIT 10";
+                    // Agregamos 'id_cita' a la consulta para poder usarlo en el formulario
+                    $sql = "SELECT id_cita, codigo, fecha, hora_inicio, paciente, medico, estado FROM v_cita_detalle ORDER BY fecha DESC, hora_inicio DESC LIMIT 10";
                     $stmt = $conexion->query($sql);
                     
                     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -126,6 +133,20 @@ require 'config/database.php';
                         echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['medico']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['estado']) . "</td>";
+                        
+                        echo "<td>";
+                        // Solo mostramos el botón si la cita está activa
+                        if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
+                            echo "<form action='cancelar_cita.php' method='POST' style='display:flex; gap:5px; margin:0;' onsubmit='return confirm(\"¿Estás seguro de cancelar esta cita?\")'>";
+                            echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
+                            echo "<input type='text' name='motivo' placeholder='Motivo...' required style='padding: 5px; width: 120px; margin:0;'>";
+                            echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; width: auto; font-weight: bold;'>Cancelar</button>";
+                            echo "</form>";
+                        } else {
+                            echo "<span style='color:gray;'>No aplica</span>";
+                        }
+                        echo "</td>";
+                        
                         echo "</tr>";
                     }
                     ?>
