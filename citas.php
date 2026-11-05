@@ -99,14 +99,17 @@ require 'config/database.php';
                 <button type="submit">Registrar Cita</button>
             </form>
         </div>
-
-        <!-- TABLA DE ÚLTIMAS CITAS -->
-                <!-- TABLA DE GESTIÓN DE CITAS (Modificada para Ciclo 2) -->
+              <!-- TABLA DE GESTIÓN DE CITAS (Modificada para Ciclo 2) -->
+               <!-- TABLA DE GESTIÓN DE CITAS (Corregida) -->
         <div class="table-section">
             <h3>Gestión de Citas</h3>
             
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'cancelada'): ?>
                 <div class="alert alert-success">¡Cita cancelada correctamente! El horario ha sido liberado.</div>
+            <?php endif; ?>
+
+            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'reprogramada'): ?>
+                <div class="alert alert-success">¡Cita reprogramada correctamente!</div>
             <?php endif; ?>
 
             <table>
@@ -117,44 +120,57 @@ require 'config/database.php';
                         <th>Paciente</th>
                         <th>Médico</th>
                         <th>Estado</th>
-                        <th>Acciones (Cancelar)</th> <!-- NUEVA COLUMNA -->
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    // Agregamos 'id_cita' a la consulta para poder usarlo en el formulario
                     $sql = "SELECT id_cita, codigo, fecha, hora_inicio, paciente, medico, estado FROM v_cita_detalle ORDER BY fecha DESC, hora_inicio DESC LIMIT 10";
                     $stmt = $conexion->query($sql);
                     
                     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                                                echo "<td style='display:flex; gap:5px;'>";
-                        // Solo mostramos los botones si la cita está activa
+                        echo "<tr>";
+                        echo "<td><b>" . htmlspecialchars($row['codigo']) . "</b></td>";
+                        echo "<td>" . htmlspecialchars($row['fecha'] . " " . $row['hora_inicio']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['medico']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['estado']) . "</td>";
+                        
+                        // Aquí está la corrección: Usamos un div dentro del td para organizar los botones
+                                                echo "<td>";
                         if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
-                            // Botón de Reprogramar
-                            echo "<a href='reprogramar_cita.php?id=" . $row['id_cita'] . "' style='background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold;'>Reprogramar</a>";
+                            echo "<div style='display: flex; gap: 5px; align-items: center;'>";
                             
-                            // Botón de Cancelar (Formulario)
-                            echo "<form action='cancelar_cita.php' method='POST' style='margin:0;' onsubmit='return confirm(\"¿Seguro de cancelar?\")'>";
+                            // Botón Reprogramar
+                            echo "<a href='reprogramar_cita.php?id=" . $row['id_cita'] . "' style='background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; white-space: nowrap;'>Reprogramar</a>";
+                            
+                            // Botón Cancelar
+                            echo "<form action='cancelar_cita.php' method='POST' style='margin: 0;' onsubmit='return pedirMotivo(event, this)'>";
                             echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
-                            echo "<input type='text' name='motivo' placeholder='Motivo...' required style='padding: 5px; width: 100px; margin:0;'>";
-                            echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;'>Cancelar</button>";
+                            echo "<input type='hidden' name='motivo' id='motivo_" . $row['id_cita'] . "'>";
+                            echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cancelar</button>";
                             echo "</form>";
+
+                            // NUEVO: Formulario para cambiar estado
+                            echo "<form action='cambiar_estado.php' method='POST' style='margin: 0; display: flex; gap: 5px;'>";
+                            echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
+                            echo "<select name='nuevo_estado' required style='padding: 5px; margin: 0; font-size: 12px; width: 110px;'>";
+                            echo "<option value=''>Estado...</option>";
+                            if ($row['estado'] == 'PROGRAMADA') {
+                                echo "<option value='CONFIRMADA'>Confirmada</option>";
+                            }
+                            echo "<option value='ATENDIDA'>Atendida</option>";
+                            echo "<option value='INASISTENCIA'>Inasistencia</option>";
+                            echo "</select>";
+                            echo "<button type='submit' style='background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cambiar</button>";
+                            echo "</form>";
+                            
+                            echo "</div>";
                         } else {
-                            echo "<span style='color:gray;'>No aplica</span>";
+                            echo "<span style='color: gray; font-size: 13px;'>No aplica</span>";
                         }
                         echo "</td>";
-                       
-                        // Solo mostramos el botón si la cita está activa
-                        if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
-                            echo "<form action='cancelar_cita.php' method='POST' style='display:flex; gap:5px; margin:0;' onsubmit='return confirm(\"¿Estás seguro de cancelar esta cita?\")'>";
-                            echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
-                            echo "<input type='text' name='motivo' placeholder='Motivo...' required style='padding: 5px; width: 120px; margin:0;'>";
-                            echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; width: auto; font-weight: bold;'>Cancelar</button>";
-                            echo "</form>";
-                        } else {
-                            echo "<span style='color:gray;'>No aplica</span>";
-                        }
-                        echo "</td>";
+                        
                         
                         echo "</tr>";
                     }

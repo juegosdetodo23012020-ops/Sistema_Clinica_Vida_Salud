@@ -43,13 +43,38 @@ if (!$cita || ($cita['estado'] != 'PROGRAMADA' && $cita['estado'] != 'CONFIRMADA
 <body>
     <div class="container">
         <h2>Reprogramar Cita: <?php echo $cita['codigo']; ?></h2>
+            <div class="container">
+        <h2>Reprogramar Cita: <?php echo $cita['codigo']; ?></h2>
         
+        <!-- MENSAJES DE ERROR DINÁMICOS -->
+        <?php if (isset($_GET['error'])): ?>
+            <?php if ($_GET['error'] == 'ocupado'): ?>
+                <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold;">
+                    ⚠️ Error: El médico ya tiene otra cita en ese horario. Elija otra hora.
+                </div>
+            <?php elseif ($_GET['error'] == 'fuera_horario'): ?>
+                <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold;">
+                    ⚠️ Error: La hora seleccionada está fuera del turno de atención del médico.
+                </div>
+            <?php elseif ($_GET['error'] == 'fecha_pasada'): ?>
+                <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold;">
+                    ⚠️ Error: No puede reprogramar una cita a una fecha u hora que ya pasó.
+                </div>
+            <?php else: ?>
+                <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold;">
+                    ⚠️ Ocurrió un error inesperado. Intente nuevamente.
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+
         <div class="info">
             <p><b>Paciente:</b> <?php echo $cita['paciente']; ?></p>
             <p><b>Médico:</b> <?php echo $cita['medico']; ?></p>
             <p><b>Fecha Actual:</b> <?php echo $cita['fecha'] . " a las " . $cita['hora_inicio']; ?></p>
         </div>
-
+        
+        <!-- El resto de tu formulario sigue aquí... -->
+   
         <form action="reprogramar_procesar.php" method="POST">
             <input type="hidden" name="id_cita" value="<?php echo $id_cita; ?>">
             

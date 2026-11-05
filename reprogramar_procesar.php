@@ -29,12 +29,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header("Location: citas.php?mensaje=reprogramada");
         exit;
 
-    } catch (PDOException $e) {
-        // Si el Trigger rechaza el cambio (ej. horario ocupado), capturamos el error
-        error_log("Error al reprogramar: " . $e->getMessage());
-        
-        // Redirigimos con el mensaje de error
-        header("Location: reprogramar_cita.php?id=" . $id_cita . "&error=ocupado");
+      } catch (PDOException $e) {
+        // Capturamos el error real que viene de los Triggers de PostgreSQL
+        $mensajeError = $e->getMessage();
+        error_log("Error al reprogramar: " . $mensajeError);
+
+        // Evaluamos qué regla de negocio se rompió
+        if (strpos($mensajeError, 'RN05') !== false) {
+            $tipo_error = 'fuera_horario';
+        } elseif (strpos($mensajeError, 'RN06') !== false) {
+            $tipo_error = 'fecha_pasada';
+        } elseif (strpos($mensajeError, 'RN07') !== false || strpos($mensajeError, 'ex_cita_sin_cruce') !== false) {
+            $tipo_error = 'ocupado';
+        } else {
+            $tipo_error = 'sistema'; // Errores desconocidos
+        }
+
+        // Redirigimos al formulario con el código de error específico
+        header("Location: reprogramar_cita.php?id=" . $id_cita . "&error=" . $tipo_error);
         exit;
     }
 } else {

@@ -105,10 +105,14 @@ $usuario = $_SESSION['nombre_usuario'];
                     <h3>Consultar Disponibilidad</h3>
                     <p>Ver horarios libres de los médicos.</p>
                 </a>
+                <a href="agenda.php" class="card">
+                    <h3>Agenda Médica</h3>
+                    <p>Ver todas las citas programadas.</p> 
+                </a>
             <?php endif; ?>
                 
             <?php if ($rol == 3): // Si es Médico ?>
-                <a href="#" class="card">
+                <a href="agenda.php" class="card">
                     <h3>Mi Agenda</h3>
                     <p>Ver mis citas programadas.</p>
                 </a>
