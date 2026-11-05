@@ -109,6 +109,10 @@ $usuario = $_SESSION['nombre_usuario'];
                     <h3>Agenda Médica</h3>
                     <p>Ver todas las citas programadas.</p> 
                 </a>
+                <a href="historial.php" class="card">
+                    <h3>Historial de Citas</h3>
+                    <p>Ver el historial por paciente.</p>
+                </a>
             <?php endif; ?>
                 
             <?php if ($rol == 3): // Si es Médico ?>
