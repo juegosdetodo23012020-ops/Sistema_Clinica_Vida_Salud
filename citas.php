@@ -127,14 +127,23 @@ require 'config/database.php';
                     $stmt = $conexion->query($sql);
                     
                     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo "<tr>";
-                        echo "<td><b>" . htmlspecialchars($row['codigo']) . "</b></td>";
-                        echo "<td>" . htmlspecialchars($row['fecha'] . " " . $row['hora_inicio']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['medico']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['estado']) . "</td>";
-                        
-                        echo "<td>";
+                                                echo "<td style='display:flex; gap:5px;'>";
+                        // Solo mostramos los botones si la cita está activa
+                        if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
+                            // Botón de Reprogramar
+                            echo "<a href='reprogramar_cita.php?id=" . $row['id_cita'] . "' style='background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold;'>Reprogramar</a>";
+                            
+                            // Botón de Cancelar (Formulario)
+                            echo "<form action='cancelar_cita.php' method='POST' style='margin:0;' onsubmit='return confirm(\"¿Seguro de cancelar?\")'>";
+                            echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
+                            echo "<input type='text' name='motivo' placeholder='Motivo...' required style='padding: 5px; width: 100px; margin:0;'>";
+                            echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;'>Cancelar</button>";
+                            echo "</form>";
+                        } else {
+                            echo "<span style='color:gray;'>No aplica</span>";
+                        }
+                        echo "</td>";
+                       
                         // Solo mostramos el botón si la cita está activa
                         if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
                             echo "<form action='cancelar_cita.php' method='POST' style='display:flex; gap:5px; margin:0;' onsubmit='return confirm(\"¿Estás seguro de cancelar esta cita?\")'>";
