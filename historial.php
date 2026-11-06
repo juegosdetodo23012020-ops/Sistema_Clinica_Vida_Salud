@@ -38,7 +38,7 @@ $id_paciente = isset($_POST['id_paciente']) ? $_POST['id_paciente'] : '';
     <div class="navbar">
         <h2>Clínica Vida Salud</h2>
         <div>
-            <span>Bienvenido, <?php echo $_SESSION['nombre_usuario']; ?></span> | 
+           <span>Bienvenido, <?php echo isset($_SESSION['nombre_usuario']) ? $_SESSION['nombre_usuario'] : 'Usuario'; ?></span> | 
             <a href="dashboard.php">Inicio</a> | 
             <a href="logout.php">Cerrar Sesión</a>
         </div>
