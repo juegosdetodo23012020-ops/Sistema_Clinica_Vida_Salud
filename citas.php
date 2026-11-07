@@ -11,24 +11,9 @@ require 'config/database.php';
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/styles.css">
     <title>Agendar Cita - Clínica Vida Salud</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; }
-        .navbar { background-color: #0056b3; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { color: white; text-decoration: none; margin-left: 15px; }
-        .container { padding: 30px; display: flex; gap: 20px; }
-        .form-section { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .table-section { flex: 2; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        input, select, textarea { width: 100%; padding: 8px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button[type="submit"] { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
-        button[type="submit"]:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #0056b3; color: white; }
-        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; }
-        .alert-success { background-color: #d4edda; color: #155724; }
-        .alert-danger { background-color: #f8d7da; color: #721c24; }
-    </style>
 </head>
 <body>
 
@@ -41,144 +26,148 @@ require 'config/database.php';
         </div>
     </div>
 
-    <div class="container">
-        <!-- FORMULARIO DE AGENDAMIENTO -->
-        <div class="form-section">
-            <h3>Agendar Nueva Cita</h3>    
-
-            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'exito'): ?>
-                <div class="alert alert-success">¡Cita agendada correctamente!</div>
-            <?php elseif (isset($_GET['error']) && $_GET['error'] == 'ocupado'): ?>
-                <div class="alert alert-danger">Error: El médico ya tiene una cita en ese horario.</div>
-            <?php elseif (isset($_GET['error']) && $_GET['error'] == 'horario'): ?>
-                <div class="alert alert-danger">Error: La fecha u hora está fuera del horario de atención.</div>
-            <?php endif; ?>
-
-            <form action="citas_procesar.php" method="POST">
-                <label>Paciente:</label>
-                <select name="id_paciente" required>
-                    <option value="">Seleccione...</option>
-                    <?php
-                    $pac_sql = "SELECT id_paciente, apellidos, nombres, ci FROM paciente WHERE estado = true ORDER BY apellidos";
-                    $pac_stmt = $conexion->query($pac_sql);
-                    while ($pac = $pac_stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo "<option value='" . $pac['id_paciente'] . "'>" . htmlspecialchars($pac['apellidos'] . ", " . $pac['nombres'] . " (CI: ".$pac['ci'].")") . "</option>";
-                    }
-                    ?>
-                </select>
-
-                <label>Médico:</label>
-                <!-- AQUÍ AGREGAMOS EL ID select_medico -->
-                <select name="id_medico" id="select_medico" required>
-                    <option value="">Seleccione...</option>
-                    <?php
-                    $med_sql = "SELECT id_medico, apellidos, nombres FROM medico WHERE estado = true ORDER BY apellidos";
-                    $med_stmt = $conexion->query($med_sql);
-                    while ($med = $med_stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo "<option value='" . $med['id_medico'] . "'>" . htmlspecialchars("Dr(a). " . $med['apellidos'] . ", " . $med['nombres']) . "</option>";
-                    }
-                    ?>
-                </select>
-
-                <label>Fecha de la Cita:</label>
-                <!-- AQUÍ AGREGAMOS EL ID fecha_cita -->
-                <input type="date" name="fecha" id="fecha_cita" required min="<?php echo date('Y-m-d'); ?>">
-
-                <label>Hora de Inicio (Seleccione un bloque):</label>
-                <!-- AQUÍ AGREGAMOS EL ID hora_inicio -->
-                <input type="time" name="hora_inicio" id="hora_inicio" required step="900">
-
-                <!-- AQUÍ VA EL PANEL VISUAL -->
-                <div id="panel_horarios" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;"></div>
-
-                <label>Modalidad:</label>
-                <select name="modalidad" required>
-                    <option value="PRESENCIAL">Presencial</option>
-                    <option value="VIRTUAL">Virtual</option>
-                </select>
-
-                <label>Motivo (Opcional):</label>
-                <textarea name="motivo" rows="2"></textarea>
-
-                <button type="submit">Registrar Cita</button>
-            </form>
-        </div>
-
-        <!-- TABLA DE GESTIÓN DE CITAS -->
-        <div class="table-section">
-            <h3>Gestión de Citas</h3>
+    <div class="main-content">
+        
+        <div class="layout-split">
             
-            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'cancelada'): ?>
-                <div class="alert alert-success">¡Cita cancelada correctamente! El horario ha sido liberado.</div>
-            <?php endif; ?>
+            <!-- COLUMNA IZQUIERDA: FORMULARIO DE AGENDAMIENTO -->
+            <div class="panel-form">
+                <h3>Agendar Nueva Cita</h3>    
 
-            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'reprogramada'): ?>
-                <div class="alert alert-success">¡Cita reprogramada correctamente!</div>
-            <?php endif; ?>
+                <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'exito'): ?>
+                    <div class="alert alert-success">¡Cita agendada correctamente!</div>
+                <?php elseif (isset($_GET['error']) && $_GET['error'] == 'ocupado'): ?>
+                    <div class="alert alert-danger">Error: El médico ya tiene una cita en ese horario.</div>
+                <?php elseif (isset($_GET['error']) && $_GET['error'] == 'horario'): ?>
+                    <div class="alert alert-danger">Error: La fecha u hora está fuera del horario de atención.</div>
+                <?php endif; ?>
 
-            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'estado_cambiado'): ?>
-                <div class="alert alert-success">¡Estado de la cita actualizado correctamente!</div>
-            <?php endif; ?>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Fecha/Hora</th>
-                        <th>Paciente</th>
-                        <th>Médico</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $sql = "SELECT id_cita, codigo, fecha, hora_inicio, paciente, medico, estado FROM v_cita_detalle ORDER BY fecha DESC, hora_inicio DESC LIMIT 10";
-                    $stmt = $conexion->query($sql);
-                    
-                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo "<tr>";
-                        echo "<td><b>" . htmlspecialchars($row['codigo']) . "</b></td>";
-                        echo "<td>" . htmlspecialchars($row['fecha'] . " " . $row['hora_inicio']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['medico']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['estado']) . "</td>";
-                        
-                        echo "<td>";
-                        if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
-                            echo "<div style='display: flex; gap: 5px; align-items: center;'>";
-                            
-                            echo "<a href='reprogramar_cita.php?id=" . $row['id_cita'] . "' style='background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; white-space: nowrap;'>Reprogramar</a>";
-                            
-                            echo "<form action='cancelar_cita.php' method='POST' style='margin: 0;' onsubmit='return pedirMotivo(event, this)'>";
-                            echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
-                            echo "<input type='hidden' name='motivo' id='motivo_" . $row['id_cita'] . "'>";
-                            echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cancelar</button>";
-                            echo "</form>";
-
-                            echo "<form action='cambiar_estado.php' method='POST' style='margin: 0; display: flex; gap: 5px;'>";
-                            echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
-                            echo "<select name='nuevo_estado' required style='padding: 5px; margin: 0; font-size: 12px; width: 110px;'>";
-                            echo "<option value=''>Estado...</option>";
-                            if ($row['estado'] == 'PROGRAMADA') { echo "<option value='CONFIRMADA'>Confirmada</option>"; }
-                            echo "<option value='ATENDIDA'>Atendida</option>";
-                            echo "<option value='INASISTENCIA'>Inasistencia</option>";
-                            echo "</select>";
-                            echo "<button type='submit' style='background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cambiar</button>";
-                            echo "</form>";
-                            
-                            echo "</div>";
-                        } else {
-                            echo "<span style='color: gray; font-size: 13px;'>No aplica</span>";
+                <form action="citas_procesar.php" method="POST">
+                    <label>Paciente:</label>
+                    <select name="id_paciente" required>
+                        <option value="">Seleccione...</option>
+                        <?php
+                        $pac_sql = "SELECT id_paciente, apellidos, nombres, ci FROM paciente WHERE estado = true ORDER BY apellidos";
+                        $pac_stmt = $conexion->query($pac_sql);
+                        while ($pac = $pac_stmt->fetch(PDO::FETCH_ASSOC)) {
+                            echo "<option value='" . $pac['id_paciente'] . "'>" . htmlspecialchars($pac['apellidos'] . ", " . $pac['nombres'] . " (CI: ".$pac['ci'].")") . "</option>";
                         }
-                        echo "</td>";
-                        echo "</tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                        ?>
+                    </select>
+
+                    <label>Médico:</label>
+                    <select name="id_medico" id="select_medico" required>
+                        <option value="">Seleccione...</option>
+                        <?php
+                        $med_sql = "SELECT id_medico, apellidos, nombres FROM medico WHERE estado = true ORDER BY apellidos";
+                        $med_stmt = $conexion->query($med_sql);
+                        while ($med = $med_stmt->fetch(PDO::FETCH_ASSOC)) {
+                            echo "<option value='" . $med['id_medico'] . "'>" . htmlspecialchars("Dr(a). " . $med['apellidos'] . ", " . $med['nombres']) . "</option>";
+                        }
+                        ?>
+                    </select>
+
+                    <label>Fecha de la Cita:</label>
+                    <input type="date" name="fecha" id="fecha_cita" required min="<?php echo date('Y-m-d'); ?>">
+
+                    <label>Hora de Inicio (Seleccione un bloque):</label>
+                    <input type="time" name="hora_inicio" id="hora_inicio" required step="900">
+
+                    <!-- PANEL VISUAL DE HORARIOS -->
+                    <div id="panel_horarios" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;"></div>
+
+                    <label>Modalidad:</label>
+                    <select name="modalidad" required>
+                        <option value="PRESENCIAL">Presencial</option>
+                        <option value="VIRTUAL">Virtual</option>
+                    </select>
+
+                    <label>Motivo (Opcional):</label>
+                    <textarea name="motivo" rows="2"></textarea>
+
+                    <button type="submit">Registrar Cita</button>
+                </form>
+            </div>
+
+            <!-- COLUMNA DERECHA: TABLA DE GESTIÓN -->
+            <div class="panel-table">
+                <h3>Gestión de Citas</h3>
+                
+                <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'cancelada'): ?>
+                    <div class="alert alert-success">¡Cita cancelada correctamente! El horario ha sido liberado.</div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'reprogramada'): ?>
+                    <div class="alert alert-success">¡Cita reprogramada correctamente!</div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'estado_cambiado'): ?>
+                    <div class="alert alert-success">¡Estado de la cita actualizado correctamente!</div>
+                <?php endif; ?>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Fecha/Hora</th>
+                                <th>Paciente</th>
+                                <th>Médico</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $sql = "SELECT id_cita, codigo, fecha, hora_inicio, paciente, medico, estado FROM v_cita_detalle ORDER BY fecha DESC, hora_inicio DESC LIMIT 10";
+                            $stmt = $conexion->query($sql);
+                            
+                            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                echo "<tr>";
+                                echo "<td><b>" . htmlspecialchars($row['codigo']) . "</b></td>";
+                                echo "<td>" . htmlspecialchars($row['fecha'] . " " . $row['hora_inicio']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['medico']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['estado']) . "</td>";
+                                
+                                echo "<td>";
+                                if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
+                                    echo "<div style='display: flex; gap: 5px; align-items: center; flex-wrap: wrap;'>";
+                                    
+                                    echo "<a href='reprogramar_cita.php?id=" . $row['id_cita'] . "' style='background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; white-space: nowrap;'>Reprogramar</a>";
+                                    
+                                    echo "<form action='cancelar_cita.php' method='POST' style='margin: 0;' onsubmit='return pedirMotivo(event, this)'>";
+                                    echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
+                                    echo "<input type='hidden' name='origen' value='citas'>";
+                                    echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cancelar</button>";
+                                    echo "</form>";
+
+                                    echo "<form action='cambiar_estado.php' method='POST' style='margin: 0; display: flex; gap: 5px;'>";
+                                    echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
+                                    echo "<select name='nuevo_estado' required style='padding: 5px; margin: 0; font-size: 12px; width: 110px;'>";
+                                    echo "<option value=''>Estado...</option>";
+                                    if ($row['estado'] == 'PROGRAMADA') { echo "<option value='CONFIRMADA'>Confirmada</option>"; }
+                                    echo "<option value='ATENDIDA'>Atendida</option>";
+                                    echo "<option value='INASISTENCIA'>Inasistencia</option>";
+                                    echo "</select>";
+                                    echo "<button type='submit' style='background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cambiar</button>";
+                                    echo "</form>";
+                                    
+                                    echo "</div>";
+                                } else {
+                                    echo "<span style='color: gray; font-size: 13px;'>No aplica</span>";
+                                }
+                                echo "</td>";
+                                echo "</tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div> <!-- Fin layout-split -->
+    </div> <!-- Fin main-content -->
 
     <!-- SCRIPT PARA EL PANEL VISUAL Y MODALES -->
     <script>
@@ -236,21 +225,15 @@ require 'config/database.php';
                             btn.style.borderRadius = '5px';
                             btn.style.fontWeight = 'bold';
 
-                            if (bloque.disponible) {
-                                btn.style.backgroundColor = '#28a745';
-                                btn.style.color = 'white';
-                                btn.style.cursor = 'pointer';
+                                 if (bloque.disponible) {
+                                btn.className = 'btn-horario-disponible'; // Usamos la clase verde
                                 btn.onclick = function() {
                                     inputHora.value = bloque.hora;
-                                    // Resaltar seleccionado
-                                    document.querySelectorAll('#panel_horarios button').forEach(b => b.style.border = 'none');
-                                    btn.style.border = '3px solid #0056b3';
+                                    document.querySelectorAll('#panel_horarios_repro button, #panel_horarios button').forEach(b => b.classList.remove('btn-horario-seleccionado'));
+                                    btn.classList.add('btn-horario-seleccionado');
                                 };
                             } else {
-                                btn.style.backgroundColor = '#dc3545';
-                                btn.style.color = 'white';
-                                btn.style.cursor = 'not-allowed';
-                                btn.style.opacity = '0.6';
+                                btn.className = 'btn-horario-ocupado'; // Usamos la clase roja
                                 btn.disabled = true;
                             }
                             panel.appendChild(btn);

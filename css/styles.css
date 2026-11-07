@@ -1,60 +1,278 @@
-/* Estilos para el Login */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #e9ecef; /* Fondo gris claro */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+/* =========================================
+   1. VARIABLES Y ESTILOS BASE
+   ========================================= */
+:root {
+    --primary: #0056b3;
+    --primary-gradient: linear-gradient(135deg, #003d82, #00c6ff);
+    --bg-color: #eef2f5;
+    --card-bg: #ffffff;
+    --text-main: #333333;
+    --text-muted: #6c757d;
+}
+
+* {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.login-container {
-    background-color: white;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Sombra elegante */
-    width: 350px;
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+    min-height: 100vh;
 }
 
-h2 {
+/* =========================================
+   2. BARRA DE NAVEGACIÓN
+   ========================================= */
+.navbar {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.navbar h2 { font-weight: 700; color: white; margin: 0; }
+.navbar span { color: #e9ecef; }
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 15px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.15);
+    transition: background 0.3s;
+}
+.navbar a:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* =========================================
+   3. CONTENEDOR MAESTRO (Para todas las páginas)
+   ========================================= */
+.main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* =========================================
+   4. DASHBOARD (Tarjetas y Secciones)
+   ========================================= */
+.dashboard-title {
     text-align: center;
-    color: #0056b3; /* Azul clínico */
+    font-size: 2rem;
+    color: var(--primary);
     margin-bottom: 30px;
 }
 
-.input-group {
-    margin-bottom: 20px;
+.section-title {
+    font-size: 1.3rem;
+    color: #444;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(0, 86, 179, 0.2);
 }
 
-.input-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #333;
-    font-weight: bold;
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
 }
 
-.input-group input {
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    text-decoration: none;
+    color: var(--text-main);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 5px; }
+.card p { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Colores para los grupos del Dashboard */
+.border-p1 { border-bottom: 4px solid #6f42c1; }
+.border-p2 { border-bottom: 4px solid #0056b3; }
+.border-p3 { border-bottom: 4px solid #28a745; }
+.border-p4 { border-bottom: 4px solid #fd7e14; }
+
+/* =========================================
+   5. LAYOUT DE DOS COLUMNAS (Para Formularios + Tablas)
+   ========================================= */
+.layout-split {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.panel-form {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.panel-table {
+    flex: 2;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   6. FORMULARIOS Y TABLAS
+   ========================================= */
+input, select, textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+    margin: 8px 0 15px 0;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.95rem;
 }
 
-button {
-    width: 100%;
-    padding: 12px;
-    background-color: #0056b3;
+button, .btn {
+    background: var(--primary-gradient);
     color: white;
+    padding: 10px 15px;
     border: none;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    transition: background 0.3s;
+    width: 100%;
 }
 
-button:hover {
-    background-color: #004494;
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+}
+
+th {
+    background-color: var(--primary);
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+tbody tr:nth-child(even) { background-color: #f8f9fa; }
+
+/* =========================================
+   7. RESPONSIVO (CELULARES)
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. Arreglar el scroll horizontal */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* 2. Adaptar la barra de navegación */
+    .navbar {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .navbar div { 
+        margin-top: 10px; 
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* 3. Arreglar los botones de la barra */
+    .navbar a {
+        margin-left: 0 !important; /* Quita el margen que se veía feo */
+        margin: 0 auto;
+        width: 80%; /* Hace que los botones no se estiren tanto */
+        max-width: 200px;
+    }
+    
+    /* 4. Apilar las columnas (Formulario y Tabla) */
+    .layout-split {
+        flex-direction: column;
+    }
+    
+    .panel-form, .panel-table {
+        width: 100%;
+    }
+    
+    /* 5. Tarjetas del Dashboard */
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* Botones del Panel Visual de Horarios */
+.btn-horario-disponible {
+    background: #28a745 !important; /* Verde */
+    color: white !important;
+    cursor: pointer;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+.btn-horario-disponible:hover {
+    transform: scale(1.1);
+}
+
+.btn-horario-ocupado {
+    background: #dc3545 !important; /* Rojo */
+    color: white !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-horario-seleccionado {
+    border: 3px solid #0056b3 !important;
+}
+/* Grid para formularios de dos columnas (ej. Mi Perfil) */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.form-grid .full-width {
+    grid-column: span 2;
+}
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-grid .full-width {
+        grid-column: span 1;
+    }
 }

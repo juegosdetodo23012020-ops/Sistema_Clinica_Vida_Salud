@@ -8,13 +8,17 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Validamos que el ID llegue correctamente
+    if (!isset($_POST['id_cita']) || empty($_POST['id_cita'])) {
+        die("Error: No se recibió el ID de la cita. Revisa el formulario.");
+    }
+
     $id_cita = $_POST['id_cita'];
     $nuevo_estado = $_POST['nuevo_estado'];
     $id_usuario = $_SESSION['usuario_id'];
+    $origen = isset($_POST['origen']) ? $_POST['origen'] : 'citas';
 
     try {
-        // Llamamos a la función de PostgreSQL que programó tu compañera
-        // Esta función actualiza el estado y dispara los Triggers de historial
         $sql = "SELECT fn_cambiar_estado_cita(:id_cita, :id_usuario, CAST(:nuevo_estado AS estado_cita))";
         $stmt = $conexion->prepare($sql);
         $stmt->execute([
@@ -23,22 +27,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':nuevo_estado' => $nuevo_estado
         ]);
 
-        // Si todo sale bien, redirigimos con mensaje de éxito
-        header("Location: citas.php?mensaje=estado_cambiado");
+        if ($origen == 'agenda') {
+            header("Location: agenda.php?mensaje=estado_cambiado");
+        } else {
+            header("Location: citas.php?mensaje=estado_cambiado");
+        }
         exit;
 
     } catch (PDOException $e) {
-        // Capturamos errores (por ejemplo, transiciones no válidas)
-        $mensajeError = $e->getMessage();
-        error_log("Error al cambiar estado: " . $mensajeError);
-
-        // Si es un error de transición no válida (RN19)
-        if (strpos($mensajeError, 'RN19') !== false || strpos($mensajeError, 'transicion') !== false) {
-            header("Location: citas.php?error=transicion_invalida");
-        } elseif (strpos($mensajeError, 'RN12') !== false) {
-            header("Location: citas.php?error=sin_permiso");
+        error_log("Error al cambiar estado: " . $e->getMessage());
+        
+        if (strpos($e->getMessage(), 'RN19') !== false || strpos($e->getMessage(), 'transicion') !== false) {
+            $error = 'transicion_invalida';
+        } elseif (strpos($e->getMessage(), 'RN12') !== false) {
+            $error = 'sin_permiso';
         } else {
-            header("Location: citas.php?error=sistema");
+            $error = 'sistema';
+        }
+        
+        if ($origen == 'agenda') {
+            header("Location: agenda.php?error=" . $error);
+        } else {
+            header("Location: citas.php?error=" . $error);
         }
         exit;
     }

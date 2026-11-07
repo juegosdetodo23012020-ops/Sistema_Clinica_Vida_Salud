@@ -10,12 +10,14 @@ if (!isset($_SESSION['usuario_id'])) {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_cita = $_POST['id_cita'];
-    $motivo = trim($_POST['motivo']);
+    $motivo = isset($_POST['motivo']) ? trim($_POST['motivo']) : 'Cancelada por el usuario';
     $id_usuario = $_SESSION['usuario_id'];
+    
+    // Recibimos el origen (mis_citas, agenda o citas) para saber a dónde redirigir
+    $origen = isset($_POST['origen']) ? $_POST['origen'] : 'citas';
 
     try {
-        // 1. Llamamos a la función de PostgreSQL que programó tu compañera
-        // Esta función cambia el estado a CANCELADA y guarda el motivo.
+        // 1. Llamamos a la función de PostgreSQL
         $sql = "SELECT fn_cancelar_cita(:id_cita, :id_usuario, :motivo)";
         $stmt = $conexion->prepare($sql);
         $stmt->execute([
@@ -24,26 +26,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':motivo' => $motivo
         ]);
 
-        // 2. El Trigger de la base de datos (trg_cita_historial_y_recordatorio) 
-        // se encarga automáticamente de:
-        // - Registrar en el historial
-        // - Anular la notificación pendiente
-        // - Liberar el horario
-
-        // Si todo sale bien, redirigimos con mensaje de éxito
-        header("Location: citas.php?mensaje=cancelada");
+        // 2. Redirección inteligente al éxito
+        if ($origen == 'mis_citas') {
+            header("Location: mis_citas.php?mensaje=cancelada");
+        } elseif ($origen == 'agenda') {
+            header("Location: agenda.php?mensaje=cancelada");
+        } else {
+            header("Location: citas.php?mensaje=cancelada");
+        }
         exit;
 
     } catch (PDOException $e) {
         error_log("Error al cancelar cita: " . $e->getMessage());
-        // En caso de error, lo mandamos de vuelta
-        echo "<h1>Error al cancelar la cita</h1>";
-        echo "<p>" . $e->getMessage() . "</p>";
-        echo "<a href='citas.php'>Volver</a>";
+        
+        // Redirección inteligente al error
+        if ($origen == 'mis_citas') {
+            header("Location: mis_citas.php?error=sistema");
+        } elseif ($origen == 'agenda') {
+            header("Location: agenda.php?error=sistema");
+        } else {
+            header("Location: citas.php?error=sistema");
+        }
         exit;
     }
 } else {
-    header("Location: citas.php");
+    // Si alguien entra directo al archivo sin POST, lo mandamos al dashboard
+    header("Location: dashboard.php");
     exit;
 }
 ?>

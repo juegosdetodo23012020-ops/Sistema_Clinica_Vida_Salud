@@ -11,19 +11,16 @@ $id_usuario = $_SESSION['usuario_id'];
 
 // 1. Lógica para saber qué médico mostrar
 if ($rol_id == 3) {
-    // Si es Médico, buscamos su propio ID de médico
     $stmt = $conexion->prepare("SELECT id_medico, nombres, apellidos FROM medico WHERE id_usuario = :id_usuario");
     $stmt->execute([':id_usuario' => $id_usuario]);
     $mi_medico = $stmt->fetch(PDO::FETCH_ASSOC);
     $id_medico_filtro = $mi_medico['id_medico'];
     $nombre_medico_filtro = "Dr(a). " . $mi_medico['nombres'] . " " . $mi_medico['apellidos'];
 } else {
-    // Si es Admin o Recepcionista, pueden seleccionar a cualquier médico
     $id_medico_filtro = isset($_POST['id_medico']) ? $_POST['id_medico'] : '';
     $nombre_medico_filtro = "Seleccione un médico";
 }
 
-// 2. Fecha por defecto (hoy) o la que seleccione el usuario
 $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
 ?>
 
@@ -31,24 +28,9 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/styles.css">
     <title>Agenda Médica - Clínica Vida Salud</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; }
-        .navbar { background-color: #0056b3; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { color: white; text-decoration: none; margin-left: 15px; }
-        .container { padding: 30px; background: white; margin: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .filters { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; background: #e9ecef; padding: 15px; border-radius: 5px; }
-        .filters input, .filters select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin: 0; }
-        .filters button { background-color: #0056b3; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 0; width: auto;}
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #0056b3; color: white; }
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        .bg-programada { background-color: #cce5ff; color: #004085; }
-        .bg-atendida { background-color: #d4edda; color: #155724; }
-        .bg-cancelada { background-color: #f8d7da; color: #721c24; }
-        .bg-inasistencia { background-color: #fff3cd; color: #856404; }
-    </style>
 </head>
 <body>
 
@@ -61,15 +43,19 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
         </div>
     </div>
 
-    <div class="container">
+    <div class="main-content">
         <h2>Agenda Médica</h2>
         
-        <form method="POST" class="filters">
+        <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'estado_cambiado'): ?>
+            <div class="alert alert-success">¡Estado de la cita actualizado correctamente!</div>
+        <?php endif; ?>
+
+        <!-- FILTROS DE BÚSQUEDA -->
+        <form method="POST" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
             <?php if ($rol_id != 3): ?>
-                <!-- Si es Admin/Recepción, mostramos la lista de médicos -->
-                <div>
-                    <label>Médico:</label><br>
-                    <select name="id_medico" required>
+                <div style="flex: 1; min-width: 250px;">
+                    <label>Médico:</label>
+                    <select name="id_medico" required style="margin-bottom: 0;">
                         <option value="">Seleccione...</option>
                         <?php
                         $med_sql = "SELECT id_medico, apellidos, nombres FROM medico WHERE estado = true";
@@ -82,74 +68,94 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
                     </select>
                 </div>
             <?php else: ?>
-                <!-- Si es Médico, mostramos su nombre fijo -->
-                <div>
-                    <label>Médico:</label><br>
-                    <input type="text" value="<?php echo $nombre_medico_filtro; ?>" readonly style="background:#ccc;">
+                <div style="flex: 1; min-width: 250px;">
+                    <label>Médico:</label>
+                    <input type="text" value="<?php echo $nombre_medico_filtro; ?>" readonly style="background:#e9ecef; margin-bottom: 0;">
                 </div>
             <?php endif; ?>
 
-            <div>
-                <label>Fecha:</label><br>
-                <input type="date" name="fecha" value="<?php echo $fecha_filtro; ?>" required>
+            <div style="flex: 1; min-width: 200px;">
+                <label>Fecha:</label>
+                <input type="date" name="fecha" value="<?php echo $fecha_filtro; ?>" required style="margin-bottom: 0;">
             </div>
             
-            <button type="submit">Consultar</button>
+            <div>
+                <button type="submit" style="width: auto; padding: 10px 25px;">Consultar</button>
+            </div>
         </form>
 
         <?php if (!empty($id_medico_filtro)): ?>
-            <h3>Citas para el <?php echo date('d/m/Y', strtotime($fecha_filtro)); ?></h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Código</th>
-                        <th>Paciente</th>
-                        <th>Especialidad</th>
-                        <th>Modalidad</th>
-                        <th>Estado</th>
-                        <th>Motivo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Consultamos la vista v_cita_detalle
-                    $sql = "SELECT codigo, hora_inicio, paciente, especialidad, modalidad, estado, motivo 
-                            FROM v_cita_detalle 
-                            WHERE id_medico = :id_medico AND fecha = :fecha 
-                            ORDER BY hora_inicio ASC";
-                    $stmt = $conexion->prepare($sql);
-                    $stmt->execute([
-                        ':id_medico' => $id_medico_filtro,
-                        ':fecha' => $fecha_filtro
-                    ]);
-                    
-                    $citas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    
-                    if (count($citas) > 0) {
-                        foreach ($citas as $row) {
-                            // Asignamos un color al badge según el estado
-                            $badge_class = 'bg-programada';
-                            if ($row['estado'] == 'ATENDIDA') $badge_class = 'bg-atendida';
-                            if ($row['estado'] == 'CANCELADA') $badge_class = 'bg-cancelada';
-                            if ($row['estado'] == 'INASISTENCIA') $badge_class = 'bg-inasistencia';
+            <div class="panel-table">
+                <h3>Citas para el <?php echo date('d/m/Y', strtotime($fecha_filtro)); ?></h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Código</th>
+                                <th>Paciente</th>
+                                <th>Especialidad</th>
+                                <th>Estado</th>
+                                <th>Acciones (Médico)</th> <!-- NUEVA COLUMNA -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Agregamos 'id_cita' a la consulta
+                            $sql = "SELECT id_cita, codigo, hora_inicio, paciente, especialidad, modalidad, estado, motivo 
+                                    FROM v_cita_detalle 
+                                    WHERE id_medico = :id_medico AND fecha = :fecha 
+                                    ORDER BY hora_inicio ASC";
+                            $stmt = $conexion->prepare($sql);
+                            $stmt->execute([
+                                ':id_medico' => $id_medico_filtro,
+                                ':fecha' => $fecha_filtro
+                            ]);
+                            
+                            $citas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            if (count($citas) > 0) {
+                                foreach ($citas as $row) {
+                                    $badge_class = 'bg-programada';
+                                    if ($row['estado'] == 'ATENDIDA') $badge_class = 'bg-atendida';
+                                    if ($row['estado'] == 'CANCELADA') $badge_class = 'bg-cancelada';
+                                    if ($row['estado'] == 'INASISTENCIA') $badge_class = 'bg-inasistencia';
 
-                            echo "<tr>";
-                            echo "<td><b>" . substr($row['hora_inicio'], 0, 5) . "</b></td>";
-                            echo "<td>" . htmlspecialchars($row['codigo']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['especialidad']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['modalidad']) . "</td>";
-                            echo "<td><span class='badge $badge_class'>" . htmlspecialchars($row['estado']) . "</span></td>";
-                            echo "<td>" . htmlspecialchars($row['motivo'] ?? '-') . "</td>";
-                            echo "</tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='7' style='text-align:center;'>No hay citas agendadas para este día.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
+                                    echo "<tr>";
+                                    echo "<td><b>" . substr($row['hora_inicio'], 0, 5) . "</b></td>";
+                                    echo "<td>" . htmlspecialchars($row['codigo']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['paciente']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['especialidad']) . "</td>";
+                                    echo "<td><span class='badge $badge_class'>" . htmlspecialchars($row['estado']) . "</span></td>";
+                                    
+                                    // LÓGICA DE ACCIONES (Solo para el médico)
+                                    echo "<td>";
+                                    if ($rol_id == 3 && ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA')) {
+                                       
+                                        echo "<form action='cambiar_estado.php' method='POST' style='margin: 0; display: flex; gap: 5px;'>";
+                                        echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>"; // <-- ESTA ES LA QUE FALTABA
+                                        echo "<input type='hidden' name='origen' value='agenda'>";
+                                        echo "<select name='nuevo_estado' required style='padding: 5px; margin: 0; font-size: 12px; width: 110px;'>";
+                                        echo "<option value=''>Seleccione...</option>";
+                                        echo "<option value='ATENDIDA'>Atendida</option>";
+                                        echo "<option value='INASISTENCIA'>Inasistencia</option>";
+                                        echo "</select>";
+                                        echo "<button type='submit' style='background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Guardar</button>";
+                                        echo "</form>";
+                                    } else {
+                                        echo "<span style='color: gray; font-size: 12px;'>-</span>";
+                                    }
+                                    echo "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='6' style='text-align:center;'>No hay citas agendadas para este día.</td></tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
 

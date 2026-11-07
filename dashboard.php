@@ -13,11 +13,13 @@ if (!isset($_SESSION['usuario_id'])) {
 // 3. RECUPERAR DATOS
 $rol = $_SESSION['rol_id'];
 $usuario = $_SESSION['nombre_usuario'];
+
 // LÓGICA PARA EL WIDGET DE PRÓXIMA CITA (Solo para pacientes)
 $proxima_cita = null;
 $total_pendientes = 0;
+$total_notificaciones = 0;
 
-    if ($rol == 4) {
+if ($rol == 4) {
     // Buscamos el ID del paciente
     $stmt_pac = $conexion->prepare("SELECT id_paciente FROM paciente WHERE id_usuario = :id_usuario");
     $stmt_pac->execute([':id_usuario' => $_SESSION['usuario_id']]);
@@ -42,161 +44,98 @@ $total_pendientes = 0;
         $stmt_count = $conexion->prepare($sql_count);
         $stmt_count->execute([':id_paciente' => $id_pac]);
         $total_pendientes = $stmt_count->fetchColumn();
+               
+        // Contamos las notificaciones NO LEÍDAS
+        $sql_notif = "SELECT COUNT(n.id_notificacion) 
+                      FROM notificacion n
+                      JOIN cita c ON n.id_cita = c.id_cita
+                      WHERE c.id_paciente = :id_paciente 
+                      AND n.leida = false 
+                      AND n.estado_envio != 'ANULADA'";
+        $stmt_notif = $conexion->prepare($sql_notif);
+        $stmt_notif->execute([':id_paciente' => $id_pac]);
+        $total_notificaciones = $stmt_notif->fetchColumn();
     }
-    }
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/styles.css">
     <title>Dashboard - Clínica Vida Salud</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; }
-        .navbar { background-color: #0056b3; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { color: white; text-decoration: none; font-weight: bold; margin-left: 15px; }
-        .container { padding: 40px; }
-        h1 { color: #333; margin-bottom: 20px; }
-        
-        /* 4. DISEÑO DE LA CUADRÍCULA (GRID) PARA LOS BOTONES */
-        .menu-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-            gap: 20px; 
-        }
-        
-        /* 5. ESTILO DE LAS TARJETAS (BOTONES) */
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            text-decoration: none; 
-            color: #333; 
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border-top: 5px solid #0056b3;
-        }
-        .card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15); 
-            background-color: #f8f9fa;
-        }
-        .card h3 { margin-top: 0; color: #0056b3; }
-    </style>
+    
+    
 </head>
-<body>
-
-    <!-- BARRA DE NAVEGACIÓN -->
+ <body>
     <div class="navbar">
         <h2>Clínica Vida Salud</h2>
         <div>
-            <span>Bienvenido, <b><?php echo $usuario; ?></b> (Rol ID: <?php echo $rol; ?>)</span> | 
+            <span>Bienvenido, <b><?php echo $usuario; ?></b></span> | 
             <a href="logout.php">Cerrar Sesión</a>
         </div>
     </div>
 
-    <div class="container">
-        <h1>Panel de Control</h1>
-                <!-- WIDGET DE PRÓXIMA CITA (Solo para Paciente) -->
-        <?php if ($rol == 4): ?>
-            <?php if ($proxima_cita): ?>
-                <div style="background-color: #d1ecf1; border-left: 5px solid #17a2b8; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <h3 style="margin-top: 0; color: #0c5460;">📅 Tu próxima cita</h3>
-                    <p style="font-size: 16px; margin-bottom: 5px;">
-                        <b>Fecha:</b> <?php echo date('d/m/Y', strtotime($proxima_cita['fecha'])); ?> a las <b><?php echo substr($proxima_cita['hora_inicio'], 0, 5); ?></b>
-                    </p>
-                    <p style="font-size: 16px; margin-top: 0;">
-                        <b>Médico:</b> <?php echo htmlspecialchars($proxima_cita['medico']); ?> (<?php echo htmlspecialchars($proxima_cita['especialidad']); ?>)
-                    </p>
-                    <?php if ($total_pendientes > 1): ?>
-                        <p style="color: #856404; background: #fff3cd; display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-bottom: 0;">
-                            ⚠️ Tienes <?php echo $total_pendientes; ?> citas pendientes en total.
-                        </p>
-                    <?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div style="background-color: #f8f9fa; border-left: 5px solid #6c757d; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <p style="margin: 0; font-size: 16px; color: #6c757d;">No tienes citas programadas próximamente. ¡Reserva una ahora!</p>
-                </div>
-            <?php endif; ?>
+    <div class="main-content">
+        <h1 class="dashboard-title">Panel de Control</h1>
+
+        <?php if ($rol == 1): ?>
+            <h2 class="section-title">🛡️ P1: Seguridad y Usuarios</h2>
+            <div class="menu-grid">
+                <a href="usuarios.php" class="card border-p1"><h3>Gestión de Usuarios</h3><p>Administrar cuentas.</p></a>
+                <a href="roles.php" class="card border-p1"><h3>Roles y Permisos</h3><p>Ver matriz de acceso.</p></a>
+            </div>
         <?php endif; ?>
 
-        <!-- AQUÍ COMIENZA EL MENÚ DE TARJETAS (El div menu-grid) -->
-        <div class="menu-grid">
-        
-        <!-- 6. MENÚ BASADO EN ROLES -->
-        <div class="menu-grid">
-            
-            <?php if ($rol == 1): // Si es Administrador ?>
-                <a href="especialidades.php" class="card">
-                    <h3>Gestión de Especialidades</h3>
-                    <p>Registrar y listar áreas médicas.</p>
+        <?php if ($rol == 1 || $rol == 2): ?>
+            <h2 class="section-title">🏥 P2: Gestión Clínica Base</h2>
+            <div class="menu-grid">
+                <a href="pacientes.php" class="card border-p2"><h3>Gestión de Pacientes</h3><p>Registrar y buscar.</p></a>
+                <a href="medicos.php" class="card border-p2"><h3>Gestión de Médicos</h3><p>Administrar especialistas.</p></a>
+                <a href="especialidades.php" class="card border-p2"><h3>Especialidades</h3><p>Listar áreas médicas.</p></a>
+                <a href="disponibilidad.php" class="card border-p2"><h3>Disponibilidad</h3><p>Ver horarios libres.</p></a>
+                 <a href="horarios.php" class="card border-p2">
+                    <h3>Gestionar Horarios</h3>
+                    <p>Asignar turnos a los médicos.</p>
                 </a>
-                <a href="usuarios.php" class="card">
-                    <h3>Gestión de Usuarios</h3>
-                    <p>Administrar cuentas del sistema.</p>
-                </a>
-                <a href="roles.php" class="card">
-                 <h3>Roles y Permisos esto la fregada</h3>
-                  <p>Ver la matriz de acceso del sistema.</p>
-                </a>
-               
-            <?php endif; ?>
-                
-            <?php if ($rol == 1 || $rol == 2): // Si es Admin o Recepcionista ?>
-                <a href="pacientes.php" class="card">
-                    <h3>Gestión de Pacientes</h3>
-                    <p>Registrar y buscar pacientes.</p>
-                </a>
-                <a href="medicos.php" class="card">
-                    <h3>Gestión de Médicos</h3>
-                    <p>Administrar médicos y especialidades.</p>
-                </a>
-              
-                <a href="citas.php" class="card">
-                    <h3>Gestión de Citas</h3>
-                    <p>Agendar, reprogramar y cancelar citas.</p>
-                </a>
-                <a href="disponibilidad.php" class="card">
-                    <h3>Consultar Disponibilidad</h3>
-                    <p>Ver horarios libres de los médicos.</p>
-                </a>
-                <a href="agenda.php" class="card">
-                    <h3>Agenda Médica</h3>
-                    <p>Ver todas las citas programadas.</p> 
-                </a>
-                <a href="historial.php" class="card">
-                    <h3>Historial de Citas</h3>
-                    <p>Ver el historial por paciente.</p>
-                </a>
-               <a href="reportes.php" class="card">
-                    <h3>Reportes</h3>
-                    <p>Ver estadísticas de la clínica.</p>
-                </a>
+            </div>
+        <?php endif; ?>
 
-            <?php endif; ?>
-                
-            <?php if ($rol == 3): // Si es Médico ?>
-                <a href="agenda.php" class="card">
-                    <h3>Mi Agenda</h3>
-                    <p>Ver mis citas programadas.</p>
-                </a>
-            <?php endif; ?>
-           
-                 <?php if ($rol == 4): // Si es Paciente ?>
-                <a href="mis_citas.php" class="card">
-                    <h3>Mis Citas / Reservar</h3>
-                    <p>Ver mi historial y agendar una consulta.</p>
-                </a>
-                <a href="mi_perfil.php" class="card">
-                    <h3>Mi Perfil</h3>
-                    <p>Actualizar mis datos personales.</p>
-                </a>
-            <?php endif; ?>
+        <?php if ($rol == 1 || $rol == 2): ?>
+            <h2 class="section-title">📅 P3: Gestión de Citas</h2>
+            <div class="menu-grid">
+                <a href="citas.php" class="card border-p3"><h3>Gestión de Citas</h3><p>Agendar y cancelar.</p></a>
+                <a href="agenda.php" class="card border-p3"><h3>Agenda Médica</h3><p>Ver citas programadas.</p></a>
+                <a href="historial.php" class="card border-p3"><h3>Historial</h3><p>Ver por paciente.</p></a>
+            </div>
+        <?php endif; ?>
 
-        </div> <!-- Fin del menu-gri>d -->
+        <?php if ($rol == 1 || $rol == 2): ?>
+            <h2 class="section-title">📊 P4: Administración</h2>
+            <div class="menu-grid">
+                <a href="reportes.php" class="card border-p4"><h3>Reportes</h3><p>Estadísticas de la clínica.</p></a>
+                <a href="notificaciones.php" class="card border-p4"><h3>Notificaciones</h3><p>Gestionar recordatorios.</p></a>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($rol == 3): ?>
+            <h2 class="section-title">🩺 Mi Espacio</h2>
+            <div class="menu-grid">
+                <a href="agenda.php" class="card border-p3"><h3>Mi Agenda</h3><p>Ver mis citas.</p></a>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($rol == 4): ?>
+            <h2 class="section-title">👤 Mi Portal</h2>
+            <div class="menu-grid">
+                <a href="mis_citas.php" class="card border-p3"><h3>Mis Citas / Reservar</h3><p>Agendar una consulta.</p></a>
+                <a href="mi_perfil.php" class="card border-p2"><h3>Mi Perfil</h3><p>Actualizar mis datos.</p></a>
+                <a href="mis_notificaciones.php" class="card border-p4"><h3>Notificaciones</h3><p>Ver recordatorios.</p></a>
+            </div>
+        <?php endif; ?>
     </div>
-
 </body>
+</html>
 </html>

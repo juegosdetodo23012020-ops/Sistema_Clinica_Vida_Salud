@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $especialidades = $_POST['especialidades']; // Esto es un array (lista) de IDs
+    $puede_marcar = isset($_POST['puede_marcar_atendida']) ? true : false;
 
     try {
         // 2. VALIDACIÓN (RN02): Verificar que el registro profesional o el correo no existan
@@ -47,9 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Obtenemos el ID del usuario que se acaba de crear
         $id_usuario = $conexion->lastInsertId();
 
-        // 5. PASO B: Crear el perfil del médico
-        $sql_medico = "INSERT INTO medico (id_usuario, registro_prof, nombres, apellidos, telefono, email) 
-                       VALUES (:id_usuario, :registro, :nombres, :apellidos, :telefono, :email)";
+                // 5. PASO B: Crear el perfil del médico
+        $sql_medico = "INSERT INTO medico (id_usuario, registro_prof, nombres, apellidos, telefono, email, puede_marcar_atendida) 
+                       VALUES (:id_usuario, :registro, :nombres, :apellidos, :telefono, :email, :puede_marcar)";
         $stmt_medico = $conexion->prepare($sql_medico);
         $stmt_medico->execute([
             ':id_usuario' => $id_usuario,
@@ -57,8 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':nombres' => $nombres,
             ':apellidos' => $apellidos,
             ':telefono' => $telefono,
-            ':email' => $email
+            ':email' => $email,
+            ':puede_marcar' => $puede_marcar // <-- Ahora sí está en la consulta y en el execute
         ]);
+            
+       
         
         // Obtenemos el ID del médico que se acaba de crear
         $id_medico = $conexion->lastInsertId();
