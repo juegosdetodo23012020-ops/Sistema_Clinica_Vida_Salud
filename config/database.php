@@ -2,28 +2,24 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Datos extraídos de tu cadena de conexión de Neon
-$host = "ep-hidden-glitter-b4n6ilin-pooler.c-6.us-east-2.aws.neon.tech";
+// --- CONFIGURACIÓN LOCAL (XAMPP) ---
+$host = "localhost";
 $port = "5432";
-$dbname = "neondb";
-$user = "neondb_owner";
-$password = "npg_qyRViE9M3LPB";
-
-// El endpoint ID es la primera parte de tu host
-$endpoint_id = "ep-hidden-glitter-b4n6ilin-pooler";
+$dbname = "clinica_vida_salud"; // El nombre de tu base de datos local
+$user = "postgres"; // Usuario por defecto de pgAdmin (cámbialo si usas otro)
+$password = "12345"; // Tu contraseña local
 
 try {
-    // LA MAGIA ESTÁ AQUÍ: Agregamos "options=endpoint=..." al DSN
-    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require;options=endpoint=$endpoint_id";
+    // Conexión local (sin las opciones de Neon)
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
     
     $conexion = new PDO($dsn, $user, $password);
     $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Mantenemos el search_path por si el script SQL creó el esquema 'clinica'
+    // Mantenemos el search_path para tu esquema 'clinica'
     $conexion->exec("SET search_path TO clinica, public;");
     
-    // echo "<h1>¡Conexión exitosa a Neon!</h1>";
 } catch (PDOException $e) {
-    echo "<h1>Error al conectar: " . $e->getMessage() . "</h1>";
+    echo "<h1>Error al conectar a la base de datos LOCAL: " . $e->getMessage() . "</h1>";
 }
 ?>

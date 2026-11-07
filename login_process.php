@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['usuario_id'] = $usuario['id_usuario'];
             $_SESSION['nombre_usuario'] = $usuario['nombre_usuario'];
             $_SESSION['rol_id'] = $usuario['id_rol'];
+            $_SESSION['nombres'] = $usuario['nombres'];
+            $_SESSION['apellidos'] = $usuario['apellidos'];
             
             // 8. Lo enviamos al Dashboard.
             header("Location: dashboard.php");

@@ -41,7 +41,7 @@ if (!$perfil) {
     <div class="navbar">
         <h2>Clínica Vida Salud</h2>
         <div>
-            <span>Bienvenido, <?php echo $_SESSION['nombre_usuario']; ?></span> | 
+            <span>Bienvenido, <?php echo htmlspecialchars(($perfil['nombres'] ?? '') . ' ' . ($perfil['apellidos'] ?? '')); ?></span> |  
             <a href="dashboard.php">Inicio</a> | 
             <a href="logout.php">Cerrar Sesión</a>
         </div>
@@ -63,11 +63,11 @@ if (!$perfil) {
                 <div class="form-grid">
                     <div>
                         <label>Documento de Identidad (CI):</label>
-                        <input type="text" value="<?php echo htmlspecialchars($perfil['ci']); ?>" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                        <input type="text" value="<?php echo htmlspecialchars($perfil['ci'] ?? ''); ?>" readonly style="background-color: #e9ecef; cursor: not-allowed;">
                     </div>
                     <div>
                         <label>Nombres Completos:</label>
-                        <input type="text" value="<?php echo htmlspecialchars($perfil['nombres'] . ' ' . $perfil['apellidos']); ?>" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                        <input type="text" value="<?php echo htmlspecialchars(($perfil['nombres'] ?? '') . ' ' . ($perfil['apellidos'] ?? '')); ?>" readonly style="background-color: #e9ecef; cursor: not-allowed;">
                     </div>
                 </div>
 
@@ -75,15 +75,15 @@ if (!$perfil) {
                 <div class="form-grid">
                     <div>
                         <label>Teléfono:</label>
-                        <input type="text" name="telefono" value="<?php echo htmlspecialchars($perfil['telefono']); ?>" required>
+                        <input type="text" name="telefono" value="<?php echo htmlspecialchars($perfil['telefono'] ?? ''); ?>" required>
                     </div>
                     <div>
                         <label>Correo Electrónico:</label>
-                        <input type="email" name="email" value="<?php echo htmlspecialchars($perfil['email']); ?>">
+                        <input type="email" name="email" value="<?php echo htmlspecialchars($perfil['email'] ?? ''); ?>">
                     </div>
                     <div class="full-width">
                         <label>Dirección:</label>
-                        <input type="text" name="direccion" value="<?php echo htmlspecialchars($perfil['direccion']); ?>">
+                        <input type="text" name="direccion" value="<?php echo htmlspecialchars($perfil['direccion'] ?? ''); ?>">
                     </div>
                 </div>
 
@@ -91,15 +91,15 @@ if (!$perfil) {
                 <div class="form-grid">
                     <div>
                         <label>Tipo de Sangre:</label>
-                        <input type="text" name="tipo_sangre" value="<?php echo htmlspecialchars($perfil['tipo_sangre']); ?>" placeholder="Ej: O+">
+                        <input type="text" name="tipo_sangre" value="<?php echo htmlspecialchars($perfil['tipo_sangre'] ?? ''); ?>" placeholder="Ej: O+">
                     </div>
                     <div>
                         <label>Alergias:</label>
-                        <input type="text" name="alergias" value="<?php echo htmlspecialchars($perfil['alergias']); ?>">
+                        <input type="text" name="alergias" value="<?php echo htmlspecialchars($perfil['alergias'] ?? ''); ?>">
                     </div>
                     <div class="full-width">
                         <label>Enfermedades Crónicas:</label>
-                        <textarea name="enfermedades_cronicas" rows="2"><?php echo htmlspecialchars($perfil['enfermedades_cronicas']); ?></textarea>
+                        <textarea name="enfermedades_cronicas" rows="2"><?php echo htmlspecialchars($perfil['enfermedades_cronicas'] ?? ''); ?></textarea>
                     </div>
                 </div>
 
@@ -107,15 +107,15 @@ if (!$perfil) {
                 <div class="form-grid">
                     <div>
                         <label>Nombre del Contacto:</label>
-                        <input type="text" name="emergencia_nombre" value="<?php echo htmlspecialchars($perfil['emergencia_nombre']); ?>">
+                        <input type="text" name="emergencia_nombre" value="<?php echo htmlspecialchars($perfil['emergencia_nombre'] ?? ''); ?>">
                     </div>
                     <div>
                         <label>Parentesco:</label>
-                        <input type="text" name="parentesco" value="<?php echo htmlspecialchars($perfil['parentesco']); ?>">
+                        <input type="text" name="parentesco" value="<?php echo htmlspecialchars($perfil['parentesco'] ?? ''); ?>">
                     </div>
                     <div class="full-width">
                         <label>Teléfono de Emergencia:</label>
-                        <input type="text" name="emergencia_telefono" value="<?php echo htmlspecialchars($perfil['emergencia_telefono']); ?>">
+                        <input type="text" name="emergencia_telefono" value="<?php echo htmlspecialchars($perfil['emergencia_telefono'] ?? ''); ?>">
                     </div>
                 </div>
 

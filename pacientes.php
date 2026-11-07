@@ -35,11 +35,21 @@ require 'config/database.php';
             <div class="panel-form">
                 <h3>Registrar Paciente</h3>
                 
+                <!-- BLOQUE DE MENSAJES CORREGIDO (Solo un if, varios elseif, un solo endif) -->
                 <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'exito'): ?>
-                    <div class="alert alert-success">¡Paciente registrado correctamente!</div>
+                    <div class="alert alert-success">
+                        ¡Paciente registrado correctamente!<br>
+                        <strong>Usuario portal:</strong> <?= htmlspecialchars($_GET['user']) ?><br>
+                        <strong>Clave temporal:</strong> <?= htmlspecialchars($_GET['pass']) ?>
+                    </div>
                 <?php elseif (isset($_GET['error']) && $_GET['error'] == 'duplicado'): ?>
                     <div class="alert alert-danger">Error: La Cédula de Identidad ya existe.</div>
+                <?php elseif (isset($_GET['error']) && $_GET['error'] == 'email_duplicado'): ?>
+                    <div class="alert alert-danger">Error: El correo electrónico ya está registrado en otro usuario.</div>
+                <?php elseif (isset($_GET['error']) && $_GET['error'] == 'sistema'): ?>
+                    <div class="alert alert-danger">Error en el sistema al guardar. Revisa el código.</div>
                 <?php endif; ?>
+                <!-- FIN DEL BLOQUE DE MENSAJES -->
 
                 <form action="pacientes_procesar.php" method="POST">
                     <label>Cédula de Identidad (CI):</label>
@@ -63,6 +73,10 @@ require 'config/database.php';
 
                     <label>Teléfono:</label>
                     <input type="text" name="telefono" required>
+                    
+                    <!-- NUEVO CAMPO -->
+                    <label>Correo Electrónico:</label>
+                    <input type="email" name="email" required placeholder="Ej: paciente@correo.com">
 
                     <button type="submit">Guardar Paciente</button>
                 </form>
