@@ -15,10 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         // 5. Buscamos en la base de datos de tu compañera (esquema clinica).
         // Buscamos por nombre_usuario o por correo.
-        $sql = "SELECT id_usuario, nombre_usuario, password_hash, id_rol 
-                FROM usuario 
-                WHERE (lower(nombre_usuario) = lower(:login) OR lower(correo) = lower(:login)) 
-                AND estado = true";
+        $sql = "SELECT id_usuario, nombre_usuario, password_hash, id_rol, nombres, apellidos FROM usuario WHERE correo = :correo OR nombre_usuario = :correo";
         
         $stmt = $conexion->prepare($sql);
         $stmt->execute([':login' => $login]);
