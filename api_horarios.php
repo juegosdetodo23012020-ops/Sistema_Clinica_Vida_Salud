@@ -19,27 +19,42 @@ if (!$id_medico || !$fecha) {
 }
 
 try {
-      // 1. Obtenemos los cupos LIBRES usando la función de PostgreSQL
-      $sql_libres = "SELECT hora_inicio FROM fn_cupos_disponibles(:id_medico, :fecha)";
-      $stmt_libres = $conexion->prepare($sql_libres);
-     $stmt_libres->execute([':id_medico' => $id_medico, ':fecha' => $fecha]);
-     $horas_libres = $stmt_libres->fetchAll(PDO::FETCH_COLUMN);
+    // ======================================================================
+    // NUEVA VALIDACIÓN RN16: Verificar si es un día no laborable (feriado)
+    // ======================================================================
+    $sql_feriado = "SELECT motivo FROM dia_no_laborable 
+                    WHERE fecha = :fecha AND (id_medico IS NULL OR id_medico = :id_medico)";
+    $stmt_feriado = $conexion->prepare($sql_feriado);
+    $stmt_feriado->execute([':fecha' => $fecha, ':id_medico' => $id_medico]);
+    $feriado = $stmt_feriado->fetch(PDO::FETCH_ASSOC);
 
-      // 2. Obtenemos los horarios de atención del médico para ese día (para saber los bloques totales)
-      $dias = ['1'=>'LUNES','2'=>'MARTES','3'=>'MIERCOLES','4'=>'JUEVES','5'=>'VIERNES','6'=>'SABADO','7'=>'DOMINGO'];
-     $dia_semana = $dias[date('N', strtotime($fecha))];
+    if ($feriado) {
+        // Si hay un feriado, devolvemos el error inmediatamente
+        echo json_encode(["error" => "⚠️ Fecha no disponible: " . $feriado['motivo'] . " (Feriado/Bloqueo)"]);
+        exit;
+    }
+    // ======================================================================
+
+    // 1. Obtenemos los cupos LIBRES usando la función de PostgreSQL
+    $sql_libres = "SELECT hora_inicio FROM fn_cupos_disponibles(:id_medico, :fecha)";
+    $stmt_libres = $conexion->prepare($sql_libres);
+    $stmt_libres->execute([':id_medico' => $id_medico, ':fecha' => $fecha]);
+    $horas_libres = $stmt_libres->fetchAll(PDO::FETCH_COLUMN);
+
+    // 2. Obtenemos los horarios de atención del médico para ese día (para saber los bloques totales)
+    $dias = ['1'=>'LUNES','2'=>'MARTES','3'=>'MIERCOLES','4'=>'JUEVES','5'=>'VIERNES','6'=>'SABADO','7'=>'DOMINGO'];
+    $dia_semana = $dias[date('N', strtotime($fecha))];
     
-     $sql_horario = "SELECT hora_inicio, hora_fin, duracion_cita_min 
+    $sql_horario = "SELECT hora_inicio, hora_fin, duracion_cita_min 
                     FROM horario_atencion 
                     WHERE id_medico = :id_medico AND dia_semana = :dia";
-     $stmt_horario = $conexion->prepare($sql_horario);
-     $stmt_horario->execute([':id_medico' => $id_medico, ':dia' => $dia_semana]);
-     $horario = $stmt_horario->fetch(PDO::FETCH_ASSOC);
+    $stmt_horario = $conexion->prepare($sql_horario);
+    $stmt_horario->execute([':id_medico' => $id_medico, ':dia' => $dia_semana]);
+    $horario = $stmt_horario->fetch(PDO::FETCH_ASSOC);
 
-      $respuesta = [];
+    $respuesta = [];
 
-    
-        if ($horario) {
+    if ($horario) {
         // Generamos los bloques de 15 minutos y vemos cuáles están libres
         $inicio = strtotime($horario['hora_inicio']);
         $fin = strtotime($horario['hora_fin']);
@@ -56,7 +71,7 @@ try {
                 "disponible" => $disponible
             ];
         }
-     } else {
+    } else {
         // Si no hay horario para ese día, buscamos qué días SÍ atiende
         $sql_dias = "SELECT dia_semana FROM horario_atencion WHERE id_medico = :id_medico ORDER BY id_horario";
         $stmt_dias = $conexion->prepare($sql_dias);
@@ -70,13 +85,13 @@ try {
         } else {
             $respuesta = ["error" => "El médico no tiene horarios configurados."];
         }
-     }
+    }
 
-     // Devolvemos la respuesta en formato JSON
-      header('Content-Type: application/json');
-       echo json_encode($respuesta);
+    // Devolvemos la respuesta en formato JSON
+    header('Content-Type: application/json');
+    echo json_encode($respuesta);
 
-     } catch (Exception $e) {
+} catch (Exception $e) {
     echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()]);
 }
 ?>

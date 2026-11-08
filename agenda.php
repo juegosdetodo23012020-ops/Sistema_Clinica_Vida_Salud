@@ -46,8 +46,11 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
     <div class="main-content">
         <h2>Agenda Médica</h2>
         
+        <!-- MENSAJES DE ESTADO -->
         <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'estado_cambiado'): ?>
             <div class="alert alert-success">¡Estado de la cita actualizado correctamente!</div>
+        <?php elseif (isset($_GET['mensaje']) && $_GET['mensaje'] == 'cancelada'): ?>
+            <div class="alert alert-danger">¡Cita cancelada correctamente por emergencia!</div>
         <?php endif; ?>
 
         <!-- FILTROS DE BÚSQUEDA -->
@@ -96,12 +99,11 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
                                 <th>Paciente</th>
                                 <th>Especialidad</th>
                                 <th>Estado</th>
-                                <th>Acciones (Médico)</th> <!-- NUEVA COLUMNA -->
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            // Agregamos 'id_cita' a la consulta
                             $sql = "SELECT id_cita, codigo, hora_inicio, paciente, especialidad, modalidad, estado, motivo 
                                     FROM v_cita_detalle 
                                     WHERE id_medico = :id_medico AND fecha = :fecha 
@@ -131,9 +133,11 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
                                     // LÓGICA DE ACCIONES (Solo para el médico)
                                     echo "<td>";
                                     if ($rol_id == 3 && ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA')) {
-                                       
+                                        echo "<div style='display: flex; gap: 5px; align-items: center; flex-wrap: wrap;'>";
+                                        
+                                        // Formulario 1: Marcar Atendida / Inasistencia
                                         echo "<form action='cambiar_estado.php' method='POST' style='margin: 0; display: flex; gap: 5px;'>";
-                                        echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>"; // <-- ESTA ES LA QUE FALTABA
+                                        echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
                                         echo "<input type='hidden' name='origen' value='agenda'>";
                                         echo "<select name='nuevo_estado' required style='padding: 5px; margin: 0; font-size: 12px; width: 110px;'>";
                                         echo "<option value=''>Seleccione...</option>";
@@ -142,6 +146,16 @@ $fecha_filtro = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
                                         echo "</select>";
                                         echo "<button type='submit' style='background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Guardar</button>";
                                         echo "</form>";
+
+                                        // Formulario 2: Cancelar por Emergencia
+                                        echo "<form action='cancelar_cita.php' method='POST' style='margin: 0;' onsubmit='return confirm(\"¿Seguro que desea cancelar esta cita por emergencia?\")'>";
+                                        echo "<input type='hidden' name='id_cita' value='" . $row['id_cita'] . "'>";
+                                        echo "<input type='hidden' name='motivo' value='Cancelada por emergencia médica'>";
+                                        echo "<input type='hidden' name='origen' value='agenda'>";
+                                        echo "<button type='submit' style='background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;'>Cancelar</button>";
+                                        echo "</form>";
+
+                                        echo "</div>";
                                     } else {
                                         echo "<span style='color: gray; font-size: 12px;'>-</span>";
                                     }

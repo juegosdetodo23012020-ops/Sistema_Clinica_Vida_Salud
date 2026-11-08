@@ -43,6 +43,13 @@ $id_paciente = $paciente['id_paciente'];
 
     <div class="main-content">
         
+        <!-- MENSAJE DE PAGO EXITOSO -->
+        <?php if (isset($_SESSION['mensaje_pago'])): ?>
+            <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px; text-align: center; border: 1px solid #c3e6cb; font-weight: bold;">
+                <?= $_SESSION['mensaje_pago']; unset($_SESSION['mensaje_pago']); ?>
+            </div>
+        <?php endif; ?>
+
         <div class="layout-split">
             
             <!-- COLUMNA IZQUIERDA: FORMULARIO DE RESERVA -->
@@ -113,19 +120,22 @@ $id_paciente = $paciente['id_paciente'];
                                 <th>Médico</th>
                                 <th>Especialidad</th>
                                 <th>Estado</th>
+                                <th>Pago</th> <!-- NUEVA COLUMNA -->
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                                                <tbody>
+                        <tbody>
                             <?php
-                            // CONSULTA DIRECTA PARA OBTENER EL id_cita Y LOS NOMBRES
+                            // CONSULTA MODIFICADA: Unimos con la tabla pago para saber si ya pagó
                             $sql = "SELECT c.id_cita, c.codigo, c.fecha, c.hora_inicio, 
                                            m.nombres || ' ' || m.apellidos AS medico, 
                                            e.nombre AS especialidad, 
-                                           c.estado 
+                                           c.estado,
+                                           p.estado_pago
                                     FROM cita c
                                     JOIN medico m ON c.id_medico = m.id_medico
                                     JOIN especialidad e ON c.id_especialidad = e.id_especialidad
+                                    LEFT JOIN pago p ON c.id_cita = p.id_cita AND p.estado_pago = 'APROBADO'
                                     WHERE c.id_paciente = :id_paciente 
                                     ORDER BY c.fecha DESC, c.hora_inicio DESC";
                             
@@ -139,6 +149,19 @@ $id_paciente = $paciente['id_paciente'];
                                 echo "<td>" . htmlspecialchars($row['medico']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['especialidad']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['estado']) . "</td>";
+                                
+                                // NUEVA CELDA DE PAGO
+                                echo "<td>";
+                                if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {
+                                    if (empty($row['estado_pago'])) {
+                                        echo "<a href='pagar_cita.php?id=" . $row['id_cita'] . "' style='background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px;'>💳 Pagar</a>";
+                                    } else {
+                                        echo "<span style='color: #28a745; font-weight: bold; font-size: 12px;'>✅ Pagado</span>";
+                                    }
+                                } else {
+                                    echo "<span style='color: gray; font-size: 12px;'>-</span>";
+                                }
+                                echo "</td>";
                                 
                                 echo "<td>";
                                 if ($row['estado'] == 'PROGRAMADA' || $row['estado'] == 'CONFIRMADA') {

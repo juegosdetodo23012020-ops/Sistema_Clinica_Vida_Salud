@@ -73,7 +73,7 @@ if ($rol == 4) {
     <div class="navbar">
         <h2>Clínica Vida Salud</h2>
         <div>
-            <span>Bienvenido, <b><?php echo $usuario; ?></b></span> | 
+            <span>Bienvenido(a), <?php echo htmlspecialchars(($_SESSION['nombres'] ?? '') . ' ' . ($_SESSION['apellidos'] ?? '')); ?></span>
             <a href="logout.php">Cerrar Sesión</a>
         </div>
     </div>

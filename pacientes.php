@@ -21,7 +21,7 @@ require 'config/database.php';
     <div class="navbar">
         <h2>Clínica Vida Salud</h2>
         <div>
-            <span>Bienvenido, <?php echo $_SESSION['nombre_usuario']; ?></span> | 
+            <span>Bienvenido(a), <?php echo htmlspecialchars(($_SESSION['nombres'] ?? '') . ' ' . ($_SESSION['apellidos'] ?? '')); ?></span>
             <a href="dashboard.php">Inicio</a> | 
             <a href="logout.php">Cerrar Sesión</a>
         </div>
